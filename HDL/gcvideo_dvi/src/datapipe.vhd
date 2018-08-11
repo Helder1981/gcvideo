@@ -378,7 +378,7 @@ begin
         video_out.PixelB <= (others => '0');
       end if;
 
-      if video_settings.DirectAnalogMode then
+      if video_settings.DirectAnalogMode or (ForceYPbPr /= '1' and video_settings.EnableAnalogMode)  then
         video_rgb_ana <= video_rgb;
         if video_rgb.Blanking then
           video_rgb_ana.PixelR <= (others => '0');
@@ -412,7 +412,7 @@ begin
   process (Clock54M, pixel_clk_en_ld)
   begin
     if rising_edge(Clock54M) and pixel_clk_en_ld then
-      if video_settings.DirectAnalogMode then
+      if video_settings.DirectAnalogMode or (ForceYPbPr /= '1' and video_settings.EnableAnalogMode) then
         video_444_ana <= video_444;
       else
         video_444_ana <= video_444_osd;
