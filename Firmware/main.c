@@ -80,11 +80,16 @@ int main(int argc, char **argv) {
   VIDEOIF->osd_bg   = osdbg_settings;
 
   while (1) {
+    if(VIDEOIF_SET_OSDON){
+	VIDEOIF->settings &= ~VIDEOIF_SET_OSDON;
+     }
     screen_idle();
     if (pad_buttons & IRBUTTON_LONG) {
       pad_clear(IRBUTTON_LONG);
       screen_irconfig();
-    } else
-      screen_mainmenu();
+    } else{
+	VIDEOIF->settings |= VIDEOIF_SET_OSDON;      
+	screen_mainmenu();
+	}
   }
 }
