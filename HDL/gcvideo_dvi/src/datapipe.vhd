@@ -405,7 +405,7 @@ begin
   process (Clock54M, pixel_clk_en_ld)
   begin
     if rising_edge(Clock54M) and pixel_clk_en_ld then
-      if not video_settings.EnableOSDOn and (video_settings.DirectAnalogMode or (ForceYPbPr /= '1' and video_settings.EnableAnalogMode)) then
+      if (not video_settings.EnableOSDOn and video_settings.DirectAnalogMode) or (not video_settings.EnableOSDOn and ForceYPbPr /= '1' and video_settings.EnableAnalogMode) then
 	video_444_ana <= video_444;
       else
         video_444_ana <= video_444_osd;

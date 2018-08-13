@@ -89,25 +89,25 @@ static void set_all_modes(uint32_t flag, bool state) {
 
 static bool set_cabledetect(int value) {
   set_all_modes(VIDEOIF_SET_CABLEDETECT, value);
-  VIDEOIF->settings = video_settings[current_videomode];
+  VIDEOIF->settings = video_settings[current_videomode] | VIDEOIF_SET_OSDON;
   return false;
 }
 
 static bool set_rgblimited(int value) {
   set_all_modes(VIDEOIF_SET_RGBLIMITED, value);
-  VIDEOIF->settings = video_settings[current_videomode];
+  VIDEOIF->settings = video_settings[current_videomode] | VIDEOIF_SET_OSDON;
   return false;
 }
 
 static bool set_dvienhanced(int value) {
   set_all_modes(VIDEOIF_SET_DVIENHANCED, value);
-  VIDEOIF->settings = video_settings[current_videomode];
+  VIDEOIF->settings = video_settings[current_videomode] | VIDEOIF_SET_OSDON;
   return true;
 }
 
 static bool set_169(int value) {
   set_all_modes(VIDEOIF_SET_169, value);
-  VIDEOIF->settings = video_settings[current_videomode];
+  VIDEOIF->settings = video_settings[current_videomode] | VIDEOIF_SET_OSDON;
   return false;
 }
 
@@ -134,7 +134,7 @@ static bool set_mute(int value) {
 
 static bool set_modeout(int value) {
   set_all_modes(VIDEOIF_SET_ANALOGMODEOUT, value);
-  VIDEOIF->settings = video_settings[current_videomode];
+  VIDEOIF->settings = video_settings[current_videomode] | VIDEOIF_SET_OSDON;
   return false;
 }
 
@@ -148,7 +148,7 @@ static bool set_analogmode(int value) {
   }
   set_all_modes(VIDEOIF_SET_ANALOG_MASK, false);
   set_all_modes(value << VIDEOIF_SET_ANALOG_SHIFT, true);
-  VIDEOIF->settings = video_settings[current_videomode];
+  VIDEOIF->settings = video_settings[current_videomode] | VIDEOIF_SET_OSDON;
   return false;
 }
 

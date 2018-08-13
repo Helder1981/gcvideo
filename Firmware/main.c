@@ -86,6 +86,7 @@ int main(int argc, char **argv) {
     screen_idle();
     if (pad_buttons & IRBUTTON_LONG) {
       pad_clear(IRBUTTON_LONG);
+      VIDEOIF->settings |= VIDEOIF_SET_OSDON;
       screen_irconfig();
     } else{
 	VIDEOIF->settings |= VIDEOIF_SET_OSDON;      
