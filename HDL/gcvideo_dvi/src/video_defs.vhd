@@ -125,6 +125,7 @@ package video_defs is
     SyncOnGreen       : boolean;
     DirectAnalogMode  : boolean;
     EnableAnalogMode  : boolean;
+    EnableOSDOn       : boolean;
     Volume            : unsigned(7 downto 0);
   end record;
 
