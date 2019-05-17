@@ -53,14 +53,17 @@ end gcdv_decoder;
 architecture Behavioral of gcdv_decoder is
   signal current_y    : unsigned(7 downto 0);
   signal current_cbcr : unsigned(7 downto 0);
+  signal current_cbcr_buffer : unsigned(7 downto 0);
   signal current_flags: std_logic_vector(7 downto 0);
 
   signal prev_csel  : std_logic;
   signal in_blanking: boolean;
-
+  signal cbcr_wait: boolean := false;
+  signal odd_start_signal: boolean := false;
   signal input_30khz: boolean := false;
   signal modecounter: natural range 0 to 3 := 0;
 
+	
   signal vdata_buf: std_logic_vector(7 downto 0);
   signal csel_buf : std_logic;
 begin
@@ -72,8 +75,16 @@ begin
       vdata_buf <= VData;
       csel_buf  <= CSel;
 
+	if odd_start_signal = false and csel_buf = '1' then
+	   odd_start_signal <= true;
+	   cbcr_wait <= true;
+	else
+	   odd_start_signal <= true;
+	end if;
+
       -- read cube signals
       prev_csel <= csel_buf;
+      
 
       if prev_csel /= csel_buf then
         -- csel_buf has changed, current value is Y
@@ -108,6 +119,8 @@ begin
         end if;
       end if;
 
+      current_cbcr_buffer <= current_cbcr;
+
       -- generate output signals
       if prev_csel /= csel_buf then
         -- output pixel data when the next Y value is received
@@ -131,7 +144,13 @@ begin
           else
             Video.PixelY    <= current_y - x"10"; -- pre-subtract the offset
           end if;
-          Video.PixelCbCr <= current_cbcr;
+	   if cbcr_wait then
+		Video.PixelCbCr <= current_cbcr_buffer;
+	   else
+	        Video.PixelCbCr <= current_cbcr;
+	   end if;       
+
+
         end if;
         Video.CurrentIsCb <= (csel_buf = '1');
 
@@ -149,4 +168,3 @@ begin
   end process;
 
 end Behavioral;
-
