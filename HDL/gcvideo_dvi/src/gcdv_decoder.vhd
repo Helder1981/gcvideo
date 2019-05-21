@@ -53,18 +53,15 @@ end gcdv_decoder;
 architecture Behavioral of gcdv_decoder is
   signal current_y    : unsigned(7 downto 0);
   signal current_cbcr : unsigned(7 downto 0);
-  signal current_cbcr_buffer : unsigned(7 downto 0);
   signal current_flags: std_logic_vector(7 downto 0);
-
   signal prev_csel  : std_logic;
+  signal in_blanking_first: boolean:=false;
   signal in_blanking: boolean;
-  signal cbcr_wait: boolean := false;
-  signal odd_start_signal: boolean := false;
   signal input_30khz: boolean := false;
   signal modecounter: natural range 0 to 3 := 0;
-
-	
   signal vdata_buf: std_logic_vector(7 downto 0);
+  signal prev_vdata_buf: std_logic_vector(7 downto 0);
+  signal prev2_vdata_buf: std_logic_vector(7 downto 0);
   signal csel_buf : std_logic;
 begin
 
@@ -74,20 +71,24 @@ begin
       -- buffer incoming data to relax timing
       vdata_buf <= VData;
       csel_buf  <= CSel;
-
-	if odd_start_signal = false and csel_buf = '1' then
-	   odd_start_signal <= true;
-	   cbcr_wait <= true;
-	else
-	   odd_start_signal <= true;
-	end if;
-
-      -- read cube signals
+     
+	
       prev_csel <= csel_buf;
-      
+
+      --Buffer 2 previous Y/Chroma values
+      prev_vdata_buf <= vdata_buf;
+      prev2_vdata_buf <= prev_vdata_buf;
 
       if prev_csel /= csel_buf then
         -- csel_buf has changed, current value is Y
+
+	      if prev_vdata_buf=x"00" and vdata_buf /= x"00" then
+		--First Pixel out of Blanking
+		in_blanking_first<=true;
+	      else
+		in_blanking_first<=false;
+	      end if;
+
         current_y <= unsigned(vdata_buf);
 
         if vdata_buf = x"00" then
@@ -114,13 +115,18 @@ begin
           if in_blanking then
             current_flags <= vdata_buf;
           else
-            current_cbcr  <= unsigned(vdata_buf);
+           
+		if in_blanking_first then
+			--Generate Fake Cb Value
+			current_cbcr  <= x"80";
+		else
+			--Use Prev Color Value
+			current_cbcr  <= unsigned(prev2_vdata_buf);
+		end if;
+
           end if;
         end if;
       end if;
-
-      current_cbcr_buffer <= current_cbcr;
-
       -- generate output signals
       if prev_csel /= csel_buf then
         -- output pixel data when the next Y value is received
@@ -133,7 +139,6 @@ begin
         Video.IsProgressive <= (current_flags(0) = '1');
         Video.IsPAL         <= (current_flags(1) = '1');
         Video.IsEvenField   <= (current_flags(6) = '1');
-
         if in_blanking then
           Video.PixelY    <= x"00";
           -- color during blanking is ignored by the 422-444 interpolator
@@ -144,15 +149,9 @@ begin
           else
             Video.PixelY    <= current_y - x"10"; -- pre-subtract the offset
           end if;
-	   if cbcr_wait then
-		Video.PixelCbCr <= current_cbcr_buffer;
-	   else
-	        Video.PixelCbCr <= current_cbcr;
-	   end if;       
-
-
+            Video.PixelCbCr <= current_cbcr;
         end if;
-        Video.CurrentIsCb <= (csel_buf = '1');
+        Video.CurrentIsCb <= (csel_buf = '0');
 
         Video.Is30kHz <= input_30kHz;
 
